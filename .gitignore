@@ -2,3 +2,6 @@
 report.html
 output.xml
 log.html
+
+# Vim
+*.swp
