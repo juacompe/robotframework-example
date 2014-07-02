@@ -31,6 +31,18 @@ Get All Todo List Contains Master Angular
     ${response}=  When I Get All Todo List
     Then Content Should Contains Master Angular  ${response}
 
+Get All Todo Contains Expected Items 
+    [Documentation]  Can get each item directly by accessing its key.
+    [Tags]  table
+    [Template]  Get All Todo Should Contains Expected Items
+    #--------------------------------------------------------------
+    #        URL          |        Title          |      Done     |
+    #--------------------------------------------------------------
+        /todos/0.json           Learn Angular           ${true}
+        /todos/1.json           Try Angular             ${true}
+        /todos/2.json           Master Angular          ${false}
+
+
 *** Keywords ***
 Given I Have Session Created
     Create Session  todo firebase  https://juacompe-todo-app.firebaseio.com
@@ -61,3 +73,20 @@ Content Should Contains
     #${items}=          Get Dictionary Values   ${jsondata}
     ${expected item}    Create Dictionary       done=${done}    title=${title}
     Dictionary Should Contain Value             ${jsondata}     ${expected item}
+
+Get All Todo Should Contains Expected Items
+    [Arguments]  ${url}  ${title}  ${done}
+    Given I Have Session Created
+    ${response}=  When I Get An Item  ${url} 
+    Item Should Be  ${response}  ${title}  ${done}
+
+When I Get An Item
+    [Arguments]  ${url}
+    ${resp}=    Get     todo firebase   ${url} 
+    [return]    ${resp}
+
+Item Should Be
+    [Arguments]  ${resp}  ${title}  ${done}
+    ${item}=            To JSON            ${resp.content}
+    ${expected item}    Create Dictionary  done=${done}    title=${title}
+    Dictionaries Should Be Equal  ${expected item}    ${item}
