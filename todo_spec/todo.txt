@@ -1,35 +1,33 @@
 *** Settings ***
 Library  Collections
 Library  RequestsLibrary
+Suite Setup     Given I Have Session Created 
 Suite Teardown  Delete All Sessions
+Documentation   ${FIREBASE_URL}/todo.json returns list of todo items.
 
 *** Variables ***
-${TODO_URL}     https://juacompe-todo-app.firebaseio.com/todos.json
+${FIREBASE_URL}     https://juacompe-todo-app.firebaseio.com
 
 *** Test cases ***
 Get All Todo List OK
-    [Documentation]  ${TODO_URL} returns list of todo items.
-    Given I Have Session Created
+    [Documentation]  Status code should be OK (200).
     ${response}=  When I Get All Todo List
-    Then Status Should Be OK  ${response}
+    Then Status Should Be OK  ${response.status_code}
 
 Get All Todo List Contains Learn Angular
-    [Documentation]  Learn Angular (done) should be in the list.
-    Given I Have Session Created
+    [Documentation]  *Learn Angular* (done) should be in the list.
     ${response}=  When I Get All Todo List
-    Then Content Should Contains Learn Angular  ${response}
+    Then Content Should Contains Learn Angular  ${response.content}
 
 Get All Todo List Contains Try Angular 
-    [Documentation]  Try Angular (done) should be in the list.
-    Given I Have Session Created
+    [Documentation]  *Try Angular* (done) should be in the list.
     ${response}=  When I Get All Todo List
-    Then Content Should Contains Try Angular  ${response}
+    Then Content Should Contains Try Angular  ${response.content}
 
 Get All Todo List Contains Master Angular 
-    [Documentation]  Master Angular (not done) should be in the list.
-    Given I Have Session Created
+    [Documentation]  *Master Angular* (not done) should be in the list.
     ${response}=  When I Get All Todo List
-    Then Content Should Contains Master Angular  ${response}
+    Then Content Should Contains Master Angular  ${response.content}
 
 Get All Todo Contains Expected Items 
     [Documentation]  Can get each item directly by accessing its key.
@@ -45,40 +43,39 @@ Get All Todo Contains Expected Items
 
 *** Keywords ***
 Given I Have Session Created
-    Create Session  todo firebase  https://juacompe-todo-app.firebaseio.com
+    Create Session  todo firebase  ${FIREBASE_URL} 
 
 I Get All Todo List
     ${resp}=    Get     todo firebase   /todos.json
     [return]    ${resp}
 
 Status Should Be OK
-    [Arguments]  ${resp}
-    Should Be Equal As Strings  ${resp.status_code}     200
+    [Arguments]  ${status code}
+    Should Be Equal As Strings  ${status code}     200
 
 Content Should Contains Learn Angular
-    [Arguments]  ${resp}
-    Content Should Contains  ${resp}    Learn Angular   ${true}
+    [Arguments]  ${content}
+    Content Should Contains  ${content}    Learn Angular   ${true}
 
 Content Should Contains Try Angular
-    [Arguments]  ${resp}
-    Content Should Contains  ${resp}    Try Angular     ${true}
+    [Arguments]  ${content}
+    Content Should Contains  ${content}    Try Angular     ${true}
 
 Content Should Contains Master Angular
-    [Arguments]  ${resp}
-    Content Should Contains  ${resp}    Master Angular  ${false}
+    [Arguments]  ${content}
+    Content Should Contains  ${content}    Master Angular  ${false}
 
 Content Should Contains
-    [Arguments]  ${resp}  ${title}  ${done}
-    ${jsondata}=        To JSON                 ${resp.content}
+    [Arguments]  ${content}  ${title}  ${done}
+    ${jsondata}=        To JSON                 ${content}
     #${items}=          Get Dictionary Values   ${jsondata}
     ${expected item}    Create Dictionary       done=${done}    title=${title}
     Dictionary Should Contain Value             ${jsondata}     ${expected item}
 
 Get All Todo Should Contains Expected Items
     [Arguments]  ${url}  ${title}  ${done}
-    Given I Have Session Created
     ${response}=  When I Get An Item  ${url} 
-    Item Should Be  ${response}  ${title}  ${done}
+    Item Should Be  ${response.content}  ${title}  ${done}
 
 When I Get An Item
     [Arguments]  ${url}
@@ -86,7 +83,7 @@ When I Get An Item
     [return]    ${resp}
 
 Item Should Be
-    [Arguments]  ${resp}  ${title}  ${done}
-    ${item}=            To JSON            ${resp.content}
+    [Arguments]  ${content}  ${title}  ${done}
+    ${item}=            To JSON            ${content}
     ${expected item}    Create Dictionary  done=${done}    title=${title}
     Dictionaries Should Be Equal  ${expected item}    ${item}
