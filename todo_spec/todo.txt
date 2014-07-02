@@ -1,0 +1,51 @@
+*** Settings ***
+Library  Collections
+Library  RequestsLibrary
+Suite Teardown  Delete All Sessions
+
+*** Variables ***
+${TODO_URL}     https://juacompe-todo-app.firebaseio.com/todos.json
+
+*** Test cases ***
+Get All Todo List OK
+    [Documentation]  ${TODO_URL} returns list of todo items.
+    Given I Have Session Created
+    ${response}=  When I Get All Todo List
+    Then Status Should Be OK  ${response}
+
+Get All Todo List Contains Learn Angular
+    Given I Have Session Created
+    ${response}=  When I Get All Todo List
+    Then Content Should Contains Learn Angular  ${response}
+
+Get All Todo List Contains Try Angular 
+    Given I Have Session Created
+    ${response}=  When I Get All Todo List
+    Then Content Should Contains Try Angular  ${response}
+
+*** Keywords ***
+Given I Have Session Created
+    Create Session  todo firebase  https://juacompe-todo-app.firebaseio.com
+
+I Get All Todo List
+    ${resp}=    Get     todo firebase   /todos.json
+    [return]    ${resp}
+
+Status Should Be OK
+    [Arguments]  ${resp}
+    Should Be Equal As Strings  ${resp.status_code}     200
+
+Content Should Contains Learn Angular
+    [Arguments]  ${resp}
+    Content Should Contains  ${resp}    Learn Angular
+
+Content Should Contains Try Angular
+    [Arguments]  ${resp}
+    Content Should Contains  ${resp}    Try Angular
+
+Content Should Contains
+    [Arguments]  ${resp}  ${title}
+    ${jsondata}=        To JSON                 ${resp.content}
+    #${items}=          Get Dictionary Values   ${jsondata}
+    ${learn angular}    Create Dictionary       done=${true}    title=${title}
+    Dictionary Should Contain Value             ${jsondata}     ${learn angular}
